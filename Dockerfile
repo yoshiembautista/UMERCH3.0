@@ -49,6 +49,13 @@ RUN install-php-extensions \
     exif \
     curl
 
+# FrankenPHP ships with cap_net_bind_service set on its binary. Restricted
+# container runtimes (Render, and anything using no-new-privileges/cap-drop)
+# refuse to exec a file that carries capabilities, which surfaces as
+# "exec: frankenphp: Operation not permitted" and exit code 126. We listen on
+# an unprivileged port, so the capability is unnecessary.
+RUN setcap -r /usr/local/bin/frankenphp
+
 WORKDIR /app
 
 # Application code first, then the build artifacts from the earlier stages.
