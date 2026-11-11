@@ -5,7 +5,7 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "deploy": "wrangler deploy",
+        "deploy:cloudflare": "wrangler deploy",
         "deploy:dry-run": "wrangler deploy --dry-run",
         "dev:worker": "wrangler dev",
         "typecheck:worker": "tsc -p cloudflare/tsconfig.json"

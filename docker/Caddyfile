@@ -1,10 +1,18 @@
 {
-	frankenphp
+	frankenphp {
+		# Render's free instance has 0.1 CPU / 512 MB. Without an explicit cap
+		# FrankenPHP sizes its thread pool from the host's CPU count and can
+		# exhaust the container memory. Two threads is plenty here.
+		num_threads 2
+		max_threads 2
+	}
 	auto_https off
 	admin off
 }
 
-:8080 {
+# Render injects PORT (default 10000) and forwards traffic to it over HTTP.
+# Cloudflare Containers does not set PORT, so it keeps using 8080.
+:{$PORT:8080} {
 	root * /app/public
 	encode zstd gzip
 	php_server

@@ -27,6 +27,7 @@ test-inventory-log.php
 
 cloudflare
 wrangler.jsonc
+render.yaml
 DEPLOYMENT.md
 README.md
 RECAPTCHA_SETUP.md

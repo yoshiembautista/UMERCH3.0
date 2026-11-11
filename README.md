@@ -44,7 +44,7 @@ The UM Merchandise Store is committed to serving students, employees, and alumni
 - **Styling:** Tailwind CSS  
 - **SPA Framework:** Inertia.js  
 - **Database:** MySQL (local), PostgreSQL on Neon (production)
-- **Hosting:** Cloudflare Containers + Workers, uploads on Cloudflare R2
+- **Hosting:** Render Free (Docker/FrankenPHP), uploads on Cloudflare R2
 
 ---
 
@@ -111,30 +111,38 @@ composer run dev
 
 ---
 
-## Deploying to Cloudflare
+## Deploying (free tier)
 
-Production runs as a **Cloudflare Container** (FrankenPHP) behind a Worker, with
-**Neon Postgres** for the database and **Cloudflare R2** for uploads.
+Production runs as a **Docker web service on Render Free** (FrankenPHP), with
+**Neon Postgres** for the database, **Cloudflare R2** for uploads, and **Brevo**
+over HTTPS for OTP email. Render's free plan blocks outbound SMTP, so mail does
+not use SMTP in production.
 
-The full walkthrough — prerequisites, secrets, first deploy, and first admin
-user — is in [`DEPLOYMENT.md`](DEPLOYMENT.md). In short:
+Everything is described by `render.yaml`. The full walkthrough — Neon, R2,
+Brevo, reCAPTCHA, secrets, first deploy, and the first admin user — is in
+[`DEPLOYMENT.md`](DEPLOYMENT.md). In short:
 
-```powershell
-npx wrangler login
-npx wrangler secret put APP_KEY        # repeat for DB_URL, R2_*, RECAPTCHA_SECRET_KEY
-npx wrangler deploy
-```
+1. Push the repository to GitHub.
+2. Render dashboard → **New → Blueprint** → select the repository.
+3. Fill in the values marked `sync: false` (all listed in `DEPLOYMENT.md`).
+4. Apply. Render builds the `Dockerfile` remotely; local Docker is not needed.
 
 Relevant files:
 
 | Path | Purpose |
 | --- | --- |
+| `render.yaml` | Render Blueprint: free Docker service, env vars and health check |
 | `Dockerfile` | Multi-stage build: Vite assets, Composer vendor, FrankenPHP runtime |
 | `docker/entrypoint.sh` | Waits for the database, runs migrations, caches config/views |
-| `wrangler.jsonc` | Worker, container, Durable Object, vars and required secrets |
-| `cloudflare/worker.ts` | Proxies requests to the single container instance |
+| `docker/Caddyfile` | Listens on `$PORT`, caps FrankenPHP threads for 512 MB |
+| `config/filesystems.php` | Switches the `public` disk to R2 when `R2_BUCKET` is set |
+| `app/Providers/AppServiceProvider.php` | Registers the Brevo HTTP mail transport |
 | `.env.production.example` | Reference list of production environment values |
 | `DEPLOYMENT.md` | Step-by-step deployment and operations guide |
 
+`wrangler.jsonc` and `cloudflare/worker.ts` remain as an optional paid
+Cloudflare Containers setup (Workers Paid, $5/month minimum); see the appendix in
+`DEPLOYMENT.md`.
+
 > Local development keeps using MySQL from `.env`. Production values are supplied
-> by Wrangler vars/secrets, not by a committed `.env` file.
+> by Render environment variables, not by a committed `.env` file.

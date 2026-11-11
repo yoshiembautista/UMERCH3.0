@@ -51,7 +51,9 @@
     "CACHE_STORE": "database",
     "QUEUE_CONNECTION": "database",
     "FILESYSTEM_DISK": "local",
-    "LOG_CHANNEL": "stderr"
+    "LOG_CHANNEL": "stderr",
+    "MAIL_MAILER": "brevo",
+    "MAIL_FROM_NAME": "UM Merch"
   },
 
   "secrets": {
@@ -64,6 +66,9 @@
       "R2_BUCKET",
       "R2_ENDPOINT",
       "R2_PUBLIC_URL",
+      "BREVO_API_KEY",
+      "MAIL_FROM_ADDRESS",
+      "RECAPTCHA_SITE_KEY",
       "RECAPTCHA_SECRET_KEY"
     ]
   }

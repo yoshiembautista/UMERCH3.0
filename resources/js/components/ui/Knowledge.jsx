@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {Link} from '@inertiajs/react';
+import {Link, usePage} from '@inertiajs/react';
 import BackgroundImage from '@images/um5.jpg';
 import LoginLogo from '@images/UMERCH-LOGIN-LOGO.svg';
 import EmailIcon from '@images/email-icon.svg';
@@ -8,6 +8,9 @@ import axios from 'axios';
 import { DeviceFingerprint } from '../../utils/DeviceFingerprint';
 
 export default function Knowledge({ showLogin, onCloseLogin }) {
+    const { recaptcha_site_key } = usePage().props;
+    const recaptchaSiteKey =
+        recaptcha_site_key || import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY';
     const [data, setData] = useState({
         login: '', 
         password: '', 
@@ -92,7 +95,7 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
                 if (recaptchaContainer && window.grecaptcha) {
                     setTimeout(() => {
                         window.grecaptcha.render('recaptcha-container', {
-                            sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY',
+                            sitekey: recaptchaSiteKey,
                             callback: 'handleRecaptchaChange',
                             theme: 'dark'
                         });
@@ -110,7 +113,7 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
             const recaptchaContainer = document.getElementById('recaptcha-container');
             if (recaptchaContainer && window.grecaptcha && !recaptchaContainer.innerHTML) {
                 window.grecaptcha.render('recaptcha-container', {
-                    sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY',
+                    sitekey: recaptchaSiteKey,
                     callback: 'handleRecaptchaChange',
                     theme: 'dark'
                 });
@@ -125,7 +128,7 @@ export default function Knowledge({ showLogin, onCloseLogin }) {
                 const recaptchaContainer = document.getElementById('recaptcha-container');
                 if (recaptchaContainer && !recaptchaContainer.innerHTML) {
                     window.grecaptcha.render('recaptcha-container', {
-                        sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || 'PLACEHOLDER_KEY',
+                        sitekey: recaptchaSiteKey,
                         callback: 'handleRecaptchaChange',
                         theme: 'dark'
                     });

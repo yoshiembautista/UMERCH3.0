@@ -46,7 +46,8 @@ RUN install-php-extensions \
     opcache \
     gd \
     bcmath \
-    exif
+    exif \
+    curl
 
 WORKDIR /app
 
@@ -72,9 +73,10 @@ RUN chmod +x /usr/local/bin/umerch-entrypoint \
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
-    LOG_CHANNEL=stderr \
-    SERVER_NAME=:8080
+    LOG_CHANNEL=stderr
 
+# Render injects PORT and forwards traffic there; the Caddyfile reads it.
+# Cloudflare Containers leaves PORT unset and uses 8080.
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/umerch-entrypoint"]

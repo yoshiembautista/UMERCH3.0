@@ -1,0 +1,89 @@
+# Render Blueprint — free hosting for UM Merch.
+#
+# 1. Push this repository to GitHub.
+# 2. In Render: New → Blueprint → pick the repository.
+# 3. Fill in every value marked `sync: false` when prompted.
+#
+# Docs: DEPLOYMENT.md
+services:
+  - type: web
+    name: umerch
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /up
+    autoDeployTrigger: commit
+    envVars:
+      - key: APP_NAME
+        value: UM Merch
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      # Generate locally with: php artisan key:generate --show
+      # (must stay stable, otherwise sessions and encrypted data break)
+      - key: APP_KEY
+        sync: false
+      # Render's public URL, injected automatically.
+      - key: APP_URL
+        fromService:
+          type: web
+          name: umerch
+          envVarKey: RENDER_EXTERNAL_URL
+
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: warning
+
+      # Neon Postgres. Use the *direct* (non-pooled) connection string: drop
+      # "-pooler" from the host. The container is a single long-lived process,
+      # and direct connections avoid PgBouncer advisory-lock issues during
+      # migrations. Example:
+      # postgresql://user:pass@ep-xxx.region.aws.neon.tech/neondb?sslmode=require
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        sync: false
+
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+
+      # Keep local for the disk name; the "public" disk switches to R2 when
+      # R2_BUCKET is set (see config/filesystems.php).
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ENDPOINT
+        sync: false
+      - key: R2_PUBLIC_URL
+        sync: false
+
+      # Render blocks outbound SMTP on the free plan, so mail goes through
+      # Brevo's HTTPS API (registered in AppServiceProvider).
+      - key: MAIL_MAILER
+        value: brevo
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: UM Merch
+
+      - key: RECAPTCHA_SITE_KEY
+        sync: false
+      - key: RECAPTCHA_SECRET_KEY
+        sync: false

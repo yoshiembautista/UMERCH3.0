@@ -31,11 +31,15 @@ I've added Google reCAPTCHA v2 Checkbox to your login form. This protection:
 Open `.env` in your project root and update these lines:
 
 ```env
-VITE_RECAPTCHA_SITE_KEY=YOUR_SITE_KEY_HERE
+RECAPTCHA_SITE_KEY=YOUR_SITE_KEY_HERE
 RECAPTCHA_SECRET_KEY=YOUR_SECRET_KEY_HERE
 ```
 
 Replace `YOUR_SITE_KEY_HERE` and `YOUR_SECRET_KEY_HERE` with the actual keys from Google.
+
+The site key is shared with the React app at runtime by
+`app/Http/Middleware/HandleInertiaRequests.php`, so changing it does not require
+a rebuild. `VITE_RECAPTCHA_SITE_KEY` is only an optional local fallback.
 
 ### 3. Files Modified
 
@@ -110,7 +114,8 @@ After setting up:
 
 Before going live:
 1. Add your production domain to Google reCAPTCHA Admin Console
-2. Update `.env` on your production server with the production keys
+2. Set `RECAPTCHA_SITE_KEY` and `RECAPTCHA_SECRET_KEY` in your host's environment
+   (Render: `render.yaml` prompts for both)
 3. Test login on production before releasing
 
 ### 9. Package Installed
