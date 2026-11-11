@@ -12,6 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Cloudflare terminates TLS at the edge and forwards requests to the
+        // container over HTTP, so trust its forwarding headers.
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
         HandleInertiaRequests::class,
     ]);

@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Orders extends Model
 {
     protected $table = '_orders';
 
     protected $primaryKey = 'order_id';
+
+    protected $appends = ['receipt_form_url'];
 
     protected $fillable = [
         'user_id',
@@ -19,6 +22,23 @@ class Orders extends Model
         'fulfillment_method',
         'campus',
     ];
+
+    /**
+     * Full public URL for the uploaded payment receipt, including when the
+     * public disk is backed by Cloudflare R2.
+     */
+    public function getReceiptFormUrlAttribute(): ?string
+    {
+        if (! $this->receipt_form) {
+            return null;
+        }
+
+        if (str_starts_with($this->receipt_form, 'http://') || str_starts_with($this->receipt_form, 'https://')) {
+            return $this->receipt_form;
+        }
+
+        return Storage::disk('public')->url($this->receipt_form);
+    }
 
     public function orderItems()
     {

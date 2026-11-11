@@ -1,24 +1,81 @@
-FROM php:8.4-cli
+# syntax=docker/dockerfile:1
 
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    libpng-dev \
-    libzip-dev \
-    libxml2-dev \
-    libonig-dev \
-    unzip \
-    git \
-    curl \
-    && docker-php-ext-install pdo pdo_pgsql pgsql zip gd mbstring xml
+# ---------------------------------------------------------------------------
+# 1. Frontend assets (Vite + React + Tailwind)
+# ---------------------------------------------------------------------------
+FROM node:22-bookworm-slim AS assets
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+WORKDIR /app
 
-WORKDIR /var/www/html
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
 
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader && php artisan storage:link
+# Public key only. Never pass secrets as Docker build arguments.
+ARG VITE_RECAPTCHA_SITE_KEY=""
+ENV VITE_RECAPTCHA_SITE_KEY=$VITE_RECAPTCHA_SITE_KEY
 
-RUN chmod -R 777 storage bootstrap/cache
+RUN npm run build
 
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
+# ---------------------------------------------------------------------------
+# 2. PHP dependencies
+# ---------------------------------------------------------------------------
+FROM composer:2 AS vendor
+
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-scripts \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader
+
+# ---------------------------------------------------------------------------
+# 3. Runtime (FrankenPHP + Laravel)
+# ---------------------------------------------------------------------------
+FROM dunglas/frankenphp:1-php8.4-bookworm
+
+RUN install-php-extensions \
+    pdo_pgsql \
+    pgsql \
+    intl \
+    zip \
+    opcache \
+    gd \
+    bcmath \
+    exif
+
+WORKDIR /app
+
+# Application code first, then the build artifacts from the earlier stages.
+COPY . .
+COPY --from=vendor /app/vendor ./vendor
+COPY --from=assets /app/public/build ./public/build
+
+COPY docker/Caddyfile /etc/frankenphp/Caddyfile
+COPY docker/php.ini /usr/local/etc/php/conf.d/99-umerch.ini
+COPY docker/entrypoint.sh /usr/local/bin/umerch-entrypoint
+
+RUN chmod +x /usr/local/bin/umerch-entrypoint \
+    && mkdir -p \
+        storage/app/public \
+        storage/framework/cache/data \
+        storage/framework/sessions \
+        storage/framework/views \
+        storage/logs \
+        bootstrap/cache \
+    && php artisan package:discover --ansi \
+    && chown -R www-data:www-data storage bootstrap/cache
+
+ENV APP_ENV=production \
+    APP_DEBUG=false \
+    LOG_CHANNEL=stderr \
+    SERVER_NAME=:8080
+
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/umerch-entrypoint"]
+CMD ["frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile", "--adapter", "caddyfile"]

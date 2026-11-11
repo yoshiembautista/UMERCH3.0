@@ -12,6 +12,8 @@
 /.vscode
 /.zed
 /auth.json
+/.wrangler
+.dev.vars
 /node_modules
 /public/build
 /public/hot

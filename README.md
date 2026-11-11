@@ -43,7 +43,8 @@ The UM Merchandise Store is committed to serving students, employees, and alumni
 - **Frontend:** React  
 - **Styling:** Tailwind CSS  
 - **SPA Framework:** Inertia.js  
-- **Database:** MySQL  
+- **Database:** MySQL (local), PostgreSQL on Neon (production)
+- **Hosting:** Cloudflare Containers + Workers, uploads on Cloudflare R2
 
 ---
 
@@ -106,3 +107,34 @@ php artisan migrate
 
 ### 12. Development Server
 composer run dev
+```
+
+---
+
+## Deploying to Cloudflare
+
+Production runs as a **Cloudflare Container** (FrankenPHP) behind a Worker, with
+**Neon Postgres** for the database and **Cloudflare R2** for uploads.
+
+The full walkthrough — prerequisites, secrets, first deploy, and first admin
+user — is in [`DEPLOYMENT.md`](DEPLOYMENT.md). In short:
+
+```powershell
+npx wrangler login
+npx wrangler secret put APP_KEY        # repeat for DB_URL, R2_*, RECAPTCHA_SECRET_KEY
+npx wrangler deploy
+```
+
+Relevant files:
+
+| Path | Purpose |
+| --- | --- |
+| `Dockerfile` | Multi-stage build: Vite assets, Composer vendor, FrankenPHP runtime |
+| `docker/entrypoint.sh` | Waits for the database, runs migrations, caches config/views |
+| `wrangler.jsonc` | Worker, container, Durable Object, vars and required secrets |
+| `cloudflare/worker.ts` | Proxies requests to the single container instance |
+| `.env.production.example` | Reference list of production environment values |
+| `DEPLOYMENT.md` | Step-by-step deployment and operations guide |
+
+> Local development keeps using MySQL from `.env`. Production values are supplied
+> by Wrangler vars/secrets, not by a committed `.env` file.

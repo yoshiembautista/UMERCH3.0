@@ -4,6 +4,9 @@ import { router } from '@inertiajs/react';
 export default function ViewReceiptFormModal({ open, onClose, product, onDeleted }) {
 if (!open || !product) return null;
 
+const receiptUrl = product.receipt_form_url
+    || (product.receipt_form ? `/storage/${product.receipt_form}` : null);
+
 const handlePrepare = (e) => {
     e.preventDefault();
     router.delete(`/admin/products/${product.product_id}`, {
@@ -26,14 +29,18 @@ return (
             onClick={e => e.stopPropagation()}
         >
             <div className='flex flex-col p-10 items-center justify-center'>
-                <img src={`/storage/${product.receipt_form}`} alt="Receipt Form" className="max-w-full max-h-64 mb-5" />
+                {receiptUrl && (
+                    <img src={receiptUrl} alt="Receipt Form" className="max-w-full max-h-64 mb-5" />
+                )}
                 <div className='flex flex-row gap-3 mt-5'>
                     <button type='button' className='flex justify-center items-center bg-white text-[#9C0306] border border-[#9C0306] text-[16px] font-semibold w-30 h-10 rounded-[5px] hover:cursor-pointer' onClick={(e) => { e.stopPropagation(); onClose(); }}>
                         Back
                     </button>
-                    <a href={`/storage/${product.receipt_form}`} download className='flex justify-center items-center bg-[#9C0306] text-white text-[16px] font-semibold border border-[#9C0306] w-30 h-10 rounded-[5px] hover:cursor-pointer'>
-                        Download
-                    </a>
+                    {receiptUrl && (
+                        <a href={receiptUrl} download className='flex justify-center items-center bg-[#9C0306] text-white text-[16px] font-semibold border border-[#9C0306] w-30 h-10 rounded-[5px] hover:cursor-pointer'>
+                            Download
+                        </a>
+                    )}
                 </div>
             </div>
         </div>

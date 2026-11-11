@@ -158,6 +158,7 @@ class PlaceOrderCont extends Controller
                     'fulfillment_method' => $order->fulfillment_method ?? 'N/A',
                     'campus' => $order->campus ?? null,
                     'receipt_form' => $order->receipt_form ?? null,
+                    'receipt_form_url' => $order->receipt_form_url,
                     'created_at' => $order->created_at,
                     'order_items' => $orderItems->map(function ($item) {
                         return [
@@ -249,7 +250,8 @@ class PlaceOrderCont extends Controller
                 'message' => 'Receipt uploaded successfully',
                 'file_path' => $filePath,
                 'new_status' => $order->status,
-                'receipt_form' => $order->receipt_form ?? $filePath
+                'receipt_form' => $order->receipt_form ?? $filePath,
+                'receipt_form_url' => $order->receipt_form_url
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -283,6 +285,7 @@ class PlaceOrderCont extends Controller
                     'order_status' => $order->status ?? 'Pending',
                     'order_total' => $orderTotal,
                     'receipt_form' => $order->receipt_form ?? null,
+                    'receipt_form_url' => $order->receipt_form_url,
                     'campus' => $order->campus ?? null,
                     'created_at' => $order->created_at,
                     'user_id' => $order->user_id,
